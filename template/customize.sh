@@ -158,6 +158,18 @@ for d in ${module_dirs}; do
     ui_print "  ✓ Installed: $d/"
 done
 
+if [ "x$KSU" = "xtrue" ] && [ "x$APATCH" = "xtrue" ]; then
+  abort "err"
+elif [ "x$KSU" = "xtrue" ]; then
+  AOK="KSU"
+  echo "AOK=KSU" > "$MODPATH/aok"
+elif [ "x$APATCH" = "xtrue" ]; then
+  AOK="APATCH"
+  ui_print "AOK=APATCH" > "$MODPATH/aok"
+else
+  abort "err"
+fi
+
 ui_print "- Initializing configuration"
 
 # Create data directory
@@ -178,6 +190,9 @@ if [ ! -f "$module_data_dir/mm.conf" ]; then
     fi
 else
     ui_print "  ℹ Existing configuration preserved"
+fi
+if [ "$AOK" = "APATCH" ]; then
+  sed -i '/^[[:space:]]*umount=true[[:space:]]*$/d' "$module_data_dir/mm.conf"
 fi
 
 ui_print "- Managing metamodule status"

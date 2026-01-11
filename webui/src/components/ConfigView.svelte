@@ -10,12 +10,17 @@
   let message = null;
   let partitionsInput = "";
 
+  let hideUmount = false;
+
   const CONFIG_FILE_PATH = "/data/adb/magic_mount/mm.conf";
 
   async function load() {
     loading = true;
     message = null;
     try {
+      const aok = await utils.loadAOK();
+      hideUmount = aok === "APATCH";
+
       config = await utils.loadConfig();
       partitionsInput = config.partitions.join(", ");
       message = $L.config.loadSuccess;
@@ -35,7 +40,8 @@
         .split(",")
         .map((s) => s.trim())
         .filter(Boolean);
-      await utils.saveConfig(config);
+
+      await utils.saveConfig(config, { omitUmount: hideUmount });
       message = $L.config.saveSuccess;
     } catch (e) {
       console.error(e);
@@ -70,21 +76,23 @@
     </div>
   </div>
 
-  <div class="field">
-    <span class="field-label">{$L.config.umountLabel}</span>
-    <div class="loglevel-switch">
-      <button
-        type="button"
-        class="lv-btn {!config.umount ? 'active' : ''}"
-        on:click={() => (config.umount = false)}>{$L.config.umountOff}</button
-      >
-      <button
-        type="button"
-        class="lv-btn {config.umount ? 'active' : ''}"
-        on:click={() => (config.umount = true)}>{$L.config.umountOn}</button
-      >
+  {#if !hideUmount}
+    <div class="field">
+      <span class="field-label">{$L.config.umountLabel}</span>
+      <div class="loglevel-switch">
+        <button
+          type="button"
+          class="lv-btn {!config.umount ? 'active' : ''}"
+          on:click={() => (config.umount = false)}>{$L.config.umountOff}</button
+        >
+        <button
+          type="button"
+          class="lv-btn {config.umount ? 'active' : ''}"
+          on:click={() => (config.umount = true)}>{$L.config.umountOn}</button
+        >
+      </div>
     </div>
-  </div>
+  {/if}
 
   <div class="field">
     <label class="field-label" for="inp-moduledir">{$L.config.moduleDir}</label>
