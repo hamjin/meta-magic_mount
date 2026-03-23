@@ -1,9 +1,9 @@
 name: build meta-mm
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "personal" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "personal" ]
   workflow_dispatch:
   workflow_call:
 
@@ -27,7 +27,7 @@ jobs:
       - name: Setup zig
         uses: mlugg/setup-zig@v2
         with:
-          version: latest
+          version: master
 
       - name: grab sstrip from ELFkickers
         run: |
@@ -50,23 +50,6 @@ jobs:
           unzip "$artifact_name".zip
           mv "$artifact_name".zip "${artifact_name/release/ci}".zip
           echo "ARTIFACT_NAME=${artifact_name/release/ci}" >> $GITHUB_ENV
-
-      - name: Notify Telegram
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: |
-          TAG_NAME=${GITHUB_REF##*/}
-          CAPTION="*CI ${TAG_NAME}*"
-          RELEASE_FILE=$(find build -maxdepth 1 -type f -name "meta*ci.zip")
-          
-          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendDocument" \
-            -F chat_id="${TELEGRAM_CHAT_ID}" \
-            -F parse_mode="Markdown" \
-            -F caption="$CAPTION" \
-            -F document=@"${RELEASE_FILE}"
-            
-          rm build/{*.zip,*.json,*.md}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v5
