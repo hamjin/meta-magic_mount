@@ -33,6 +33,7 @@ static int ksu_grab_fd(void) {
 }
 
 int ksu_send_unmountable(const char *mntpoint) {
+#if 0
     struct ksu_add_try_umount_cmd cmd = {0};
     int fd = ksu_grab_fd();
 
@@ -47,6 +48,7 @@ int ksu_send_unmountable(const char *mntpoint) {
         LOGE("ioctl KSU_IOCTL_ADD_TRY_UMOUNT failed: %s", strerror(errno));
         return -1;
     }
+#endif
 
     return 0;
 }

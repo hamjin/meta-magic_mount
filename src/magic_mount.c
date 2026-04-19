@@ -78,7 +78,7 @@ static int mm_mirror_entry(MagicMount *ctx, const char *path, const char *work, 
         }
         close(fd);
 
-        if (mount(src, dst, NULL, MS_BIND, NULL) < 0) {
+        if (mount(src, dst, NULL, MS_BIND, ctx->enable_unmountable ? "hidden" : NULL) < 0) {
             LOGE("bind %s->%s: %s", src, dst, strerror(errno));
             return -1;
         }
@@ -148,7 +148,7 @@ static int mm_apply_regular_file(MagicMount *ctx, const char *path, const char *
 
     LOGD("bind %s -> %s", node->module_path, target);
 
-    if (mount(node->module_path, target, NULL, MS_BIND, NULL) < 0) {
+    if (mount(node->module_path, target, NULL, MS_BIND, ctx->enable_unmountable ? "hidden" : NULL) < 0) {
         LOGE("bind %s->%s: %s", node->module_path, target, strerror(errno));
         return -1;
     } else if (!strstr(target, ".magic_mount/workdir/")) {
@@ -156,7 +156,7 @@ static int mm_apply_regular_file(MagicMount *ctx, const char *path, const char *
             ksu_send_unmountable(path);
     }
 
-    (void)mount(NULL, target, NULL, MS_REMOUNT | MS_BIND | MS_RDONLY, NULL);
+    (void)mount(NULL, target, NULL, MS_REMOUNT | MS_BIND | MS_RDONLY, ctx->enable_unmountable ? "hidden" : NULL);
 
     ctx->stats.nodes_mounted++;
     return 0;
@@ -367,7 +367,7 @@ static int mm_apply_node_recursive(MagicMount *ctx, const char *base, const char
         }
 
         if (create_tmp) {
-            if (mount(wpath, wpath, NULL, MS_BIND, NULL) < 0) {
+            if (mount(wpath, wpath, NULL, MS_BIND, ctx->enable_unmountable ? "hidden" : NULL) < 0) {
                 LOGE("bind self %s: %s", wpath, strerror(errno));
                 return -1;
             }
@@ -380,9 +380,9 @@ static int mm_apply_node_recursive(MagicMount *ctx, const char *base, const char
             return -1;
 
         if (create_tmp) {
-            (void)mount(NULL, wpath, NULL, MS_REMOUNT | MS_BIND | MS_RDONLY, NULL);
+            (void)mount(NULL, wpath, NULL, MS_REMOUNT | MS_BIND | MS_RDONLY, ctx->enable_unmountable ? "hidden" : NULL);
 
-            if (mount(wpath, path, NULL, MS_MOVE, NULL) < 0) {
+            if (mount(wpath, path, NULL, MS_MOVE, ctx->enable_unmountable ? "hidden" : NULL) < 0) {
                 LOGE("move %s->%s failed: %s", wpath, path, strerror(errno));
                 if (node->module_name)
                     module_mark_failed(ctx, node->module_name);
